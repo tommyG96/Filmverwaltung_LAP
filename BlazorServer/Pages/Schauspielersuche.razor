@@ -1,0 +1,177 @@
+﻿@page "/schauspielersuche"
+
+
+@using DataLibrary
+@using BlazorServer.Models
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration _config
+@inject IDataAccess _data
+@inject NavigationManager UriHelper
+@using Microsoft.AspNetCore.WebUtilities
+
+
+<h3>Film</h3>
+
+@if (film == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <style>
+        table {
+            font-family: arial, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td, th {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #dddddd;
+        }
+    </style>
+    <br />
+    <br />
+    @*<table>
+            <tr>
+                <th>Film ID</th>
+                <th>Filmtitel</th>
+                <th>Erscheinungsdatum</th>
+                <th>Prod Id</th>
+            </tr>
+            @foreach (var f in film)
+            {
+                <tr>
+                    <td>
+                        @f.film_Id
+                    </td>
+                    <td>
+                        @f.film_Titel
+                    </td>
+                    <td>
+                        @f.film_Datum.ToString("dd.MM.yyyy")
+                    </td>
+                    <td>
+                        @f.prod_Id
+                    </td>
+                    <td>
+
+                            <a class="btn btn-dark" href="@("/details?FilmID="+f.film_Id.ToString())">Details</a>
+
+                        </td>
+                    <td>
+
+                            <button class="btn btn-danger" @onclick="@(async () => await DeleteData(m.mov_Id))">Delete</button>
+
+                        </td>
+                </tr>
+            }
+        </table>*@
+
+
+    // "Teil-"Stringsuche mit Regex (es dürfen nur Buchstaben eingegeben werde, keine Zahlen oder Sonderzeichen)
+    // bei Click auf "Submit" wird suche ausgeführt und die Tabelle befüllt
+
+    <br />
+    <br />
+    <form action="/Schauspielersuche">
+        <label for="Schauspieler">Suche Film nach Schauspieler:</label>
+        <input @bind="_value" type="text" id="_value" name="Schauspieler"
+               pattern="[A-Za-z][A-Za-z\s]*" title="Schauspieler nicht gefunden" required><br>
+        <input type="submit">
+    </form>
+    <br />
+    <br />
+
+    <table>
+        <tr>
+            <th>Filmtitel</th>
+            <th>Erscheinungsdatum</th>
+            <th>Produktionsfirma</th>
+        </tr>
+
+        @foreach (var s in searchfilm)
+        {
+            <tr>
+                <td>
+                    @s.film_Titel
+                </td>
+                <td>
+                    @s.Schauspieler
+                </td>
+                <td>
+                    @s.prod_Bezeichnung
+                </td>
+            </tr>
+        }
+    </table>
+    if (Schauspielergefunden != true)
+    {
+        <div id="snackbar">Schauspieler wurde nicht gefunden</div>
+    }
+
+
+    @*<form action="/details">
+            <label for="Start Date">Zeitraum:</label>
+            <input @bind="_value1" class="_value1" type="date" id="_value1" name="startdate" min="1900-01-01">
+            <label for="End Date">   -   </label>
+            <input @bind="_value2" class="_value2" type="date" id="_value2" name="enddate" max="_today">
+            <button class="btn btn-dark">Search</button>
+        </form>*@
+}
+
+@code {
+    List<FilmModel> film;
+    List<FilmModel> searchfilm = new List<FilmModel>();
+
+    //List<FilmProdfirmenModel> Prodfirmen;
+
+    private bool Schauspielergefunden = false;
+    private string querySchauspieler;
+    private string queryID;
+    private string _value;
+
+    private async Task SearchData(string bezeichnung)
+    {
+        bezeichnung = "%" + bezeichnung + "%";
+        string sql = "select f.film_Titel, concat_ws(' ', s.schau_Vname, s.schau_Nname) as Schauspieler, p.prod_Bezeichnung from film f left join produktionsfirma p on f.prod_Id = p.prod_Id left join schauspieler_film sf on f.film_Id = sf.film_Id left join schauspieler s on sf.schau_Id = s.schau_Id where concat_ws(' ', s.schau_Vname, s.schau_Nname) like @schauspieler";
+
+        searchfilm = await _data.LoadData<FilmModel, dynamic>(sql, new { schauspieler = bezeichnung }, _config.GetConnectionString("default"));
+        Schauspielergefunden = true;
+    }
+
+    private async Task LoadAllData()
+    {
+        string sql = "select * from film";
+
+        film = await _data.LoadData<FilmModel, dynamic>(sql, new { }, _config.GetConnectionString("default"));
+    }
+
+
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = UriHelper.ToAbsoluteUri(UriHelper.Uri);
+
+        if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("Schauspieler", out var param))
+        {
+            querySchauspieler = param.First();
+        }
+        //if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("enddate", out param))
+        //{
+        //    queryEnd = param.First();
+        //}
+        await LoadAllData();
+        if (querySchauspieler != null)
+        {
+            await SearchData(querySchauspieler);
+        }
+    }
+}
