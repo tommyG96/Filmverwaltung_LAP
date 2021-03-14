@@ -112,7 +112,7 @@ else
     </table>
     if (Firmagefunden != true)
     {
-        <div id="snackbar">Produktionsfirma wurde nicht gefunden</div>
+        <p>Produktionsfirma wurde nicht gefunden</p>
     }
 }
 
@@ -122,7 +122,7 @@ else
 
     //List<FilmProdfirmenModel> Prodfirmen;
 
-    private bool Firmagefunden = false;
+    private bool Firmagefunden = true;
     private string queryProdfirma;
     private string queryID;
     private string _value;
@@ -133,7 +133,14 @@ else
         string sql = "select f.film_Titel, f.film_Datum, p.prod_Bezeichnung from film f left join produktionsfirma p on f.prod_Id=p.prod_Id where p.prod_Bezeichnung like @produktions_Bezeichnung";
 
         searchfilm = await _data.LoadData<FilmModel, dynamic>(sql, new { produktions_Bezeichnung = bezeichnung }, _config.GetConnectionString("default"));
-        Firmagefunden = true;
+        if (searchfilm != null && searchfilm.Count > 0)
+        {
+            Firmagefunden = true;
+        }
+        else
+        {
+            Firmagefunden = false;
+        }
     }
 
     private async Task LoadAllData()
@@ -155,10 +162,7 @@ else
         {
             queryProdfirma = param.First();
         }
-        //if (QueryHelpers.ParseQuery(uri.Query).TryGetValue("enddate", out param))
-        //{
-        //    queryEnd = param.First();
-        //}
+
         await LoadAllData();
         if (queryProdfirma != null)
         {

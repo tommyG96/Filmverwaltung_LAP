@@ -112,7 +112,7 @@ else
     </table>
     if (Schauspielergefunden != true)
     {
-        <div id="snackbar">Schauspieler wurde nicht gefunden</div>
+        <p>Schauspieler wurde nicht gefunden</p>
     }
 
 
@@ -131,7 +131,7 @@ else
 
     //List<FilmProdfirmenModel> Prodfirmen;
 
-    private bool Schauspielergefunden = false;
+    private bool Schauspielergefunden = true;
     private string querySchauspieler;
     private string queryID;
     private string _value;
@@ -142,7 +142,14 @@ else
         string sql = "select f.film_Titel, concat_ws(' ', s.schau_Vname, s.schau_Nname) as Schauspieler, p.prod_Bezeichnung from film f left join produktionsfirma p on f.prod_Id = p.prod_Id left join schauspieler_film sf on f.film_Id = sf.film_Id left join schauspieler s on sf.schau_Id = s.schau_Id where concat_ws(' ', s.schau_Vname, s.schau_Nname) like @schauspieler";
 
         searchfilm = await _data.LoadData<FilmModel, dynamic>(sql, new { schauspieler = bezeichnung }, _config.GetConnectionString("default"));
-        Schauspielergefunden = true;
+        if (searchfilm != null && searchfilm.Count > 0)
+        {
+            Schauspielergefunden = true;
+        }
+        else
+        {
+            Schauspielergefunden = false;
+        }
     }
 
     private async Task LoadAllData()
