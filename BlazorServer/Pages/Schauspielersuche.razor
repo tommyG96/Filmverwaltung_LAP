@@ -88,31 +88,35 @@ else
     <br />
     <br />
 
-    <table>
-        <tr>
-            <th>Filmtitel</th>
-            <th>Erscheinungsdatum</th>
-            <th>Produktionsfirma</th>
-        </tr>
 
-        @foreach (var s in searchfilm)
-        {
-            <tr>
-                <td>
-                    @s.film_Titel
-                </td>
-                <td>
-                    @s.Schauspieler
-                </td>
-                <td>
-                    @s.prod_Bezeichnung
-                </td>
-            </tr>
-        }
-    </table>
     if (Schauspielergefunden != true)
     {
         <p>Schauspieler wurde nicht gefunden</p>
+    }
+    else
+    {
+        <table>
+            <tr>
+                <th>Filmtitel</th>
+                <th>Erscheinungsdatum</th>
+                <th>Produktionsfirma</th>
+            </tr>
+
+            @foreach (var s in searchfilm)
+            {
+                <tr>
+                    <td>
+                        @s.film_Titel
+                    </td>
+                    <td>
+                        @s.Schauspieler
+                    </td>
+                    <td>
+                        @s.prod_Bezeichnung
+                    </td>
+                </tr>
+            }
+        </table>
     }
 
 
